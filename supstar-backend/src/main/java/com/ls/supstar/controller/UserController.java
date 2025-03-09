@@ -4,8 +4,10 @@ import com.ls.supstar.common.BaseResponse;
 import com.ls.supstar.common.ErrorCode;
 import com.ls.supstar.common.ResultUtils;
 import com.ls.supstar.exeception.BusinessException;
+import com.ls.supstar.model.dto.user.UserLoginRequest;
 import com.ls.supstar.model.dto.user.UserRegisterRequest;
 
+import com.ls.supstar.model.vo.LoginUserVo;
 import com.ls.supstar.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/user")
@@ -47,6 +50,33 @@ public class UserController {
         long  result = userService.register(userAccount,userPassword,checkPassword);
 
         return ResultUtils.success(result);
+    }
+
+    /**
+     * 用户登录
+     * @param userLoginRequest
+     * @return
+     */
+    @PostMapping("/login")
+    public BaseResponse<LoginUserVo> register(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+
+        //逻辑校验参数
+        if (userLoginRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+
+        }
+
+        String userAccount = userLoginRequest.getUserAccount();
+        String userPassword = userLoginRequest.getUserPassword();
+
+        if(StringUtils.isAnyBlank(userAccount, userPassword)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        //用户注册
+        LoginUserVo  loginUserVo = userService.login(userAccount,userPassword,request);
+
+        return ResultUtils.success(loginUserVo);
     }
 
 

@@ -1,5 +1,6 @@
 package com.ls.supstar.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -7,11 +8,17 @@ import com.ls.supstar.common.ErrorCode;
 import com.ls.supstar.exeception.BusinessException;
 import com.ls.supstar.mapper.UserMapper;
 import com.ls.supstar.model.entity.User;
+import com.ls.supstar.model.vo.LoginUserVo;
 import com.ls.supstar.service.UserService;
 import java.util.Date;
+import java.util.Objects;
+
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+
+import javax.servlet.http.HttpServletRequest;
 
 
 /**
@@ -75,6 +82,50 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             }
             return user.getId();
         }
+    }
+
+    /**
+     * 用户登录
+     * @param userAccount
+     * @param userPassword
+     * @return
+     */
+    @Override
+    public LoginUserVo login(String userAccount, String userPassword, HttpServletRequest request) {
+        //参数逻辑校验
+        if (StringUtils.isAnyBlank(userAccount, userPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
+        }
+
+        // 业务逻辑校验  能避免不符合的数据直接请求数据库
+        if (userAccount.length() < 4) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号错误");
+        }
+        if (userPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码错误");
+        }
+
+        // 账户是否存在
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(User::getUserAccount, userAccount);
+        User user = this.getOne(userLambdaQueryWrapper);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在");
+        }
+        // 密码是否正确
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+        if (!Objects.equals(user.getUserPassword(), encryptPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码错误");
+        }
+
+        // 返回结果 不返回敏感信息，比如说密码
+        LoginUserVo loginUserVo = new LoginUserVo();
+        BeanUtils.copyProperties(user, loginUserVo);
+
+
+        //存在将用户信息存在session中
+        request.getSession().setAttribute("user",loginUserVo);
+        return loginUserVo;
     }
 }
 

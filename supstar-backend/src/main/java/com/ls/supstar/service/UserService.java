@@ -2,6 +2,9 @@ package com.ls.supstar.service;
 
 import com.ls.supstar.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.ls.supstar.model.vo.LoginUserVo;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
 * @author 26611
@@ -18,4 +21,12 @@ public interface UserService extends IService<User> {
      * @return
      */
     long register(String userAccount, String userPassword, String checkPassword);
+
+    /**
+     * 用户登录
+     * @param userAccount
+     * @param userPassword
+     * @return
+     */
+    LoginUserVo login(String userAccount, String userPassword, HttpServletRequest request);
 }
