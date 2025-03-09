@@ -124,8 +124,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
 
         //存在将用户信息存在session中
-        request.getSession().setAttribute("user",loginUserVo);
+        request.getSession().setAttribute("user",user.getId());
         return loginUserVo;
+    }
+
+    /**
+     * 用户登出
+     * @param request
+     * @return
+     */
+    @Override
+    public Boolean logout(HttpServletRequest request) {
+        // 拦截器会拦截 请求 不拦截也行，先拦截吧
+
+        // 移除session
+        request.getSession().removeAttribute("user");
+        return null;
     }
 }
 

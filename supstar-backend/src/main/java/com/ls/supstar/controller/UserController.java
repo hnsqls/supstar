@@ -79,6 +79,25 @@ public class UserController {
         return ResultUtils.success(loginUserVo);
     }
 
+    /**
+     * 用户退出
+     * @param request
+     * @return
+     */
+    @PostMapping("/logout")
+    public BaseResponse<Boolean> register(HttpServletRequest request) {
+
+        //逻辑校验参数
+        if (request == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+
+        //用户退出
+        Boolean result = userService.logout(request);
+        return ResultUtils.success(result);
+    }
+
 
 
 }

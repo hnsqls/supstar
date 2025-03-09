@@ -29,4 +29,11 @@ public interface UserService extends IService<User> {
      * @return
      */
     LoginUserVo login(String userAccount, String userPassword, HttpServletRequest request);
+
+    /**
+     * 用户登出
+     * @param request
+     * @return
+     */
+    Boolean logout(HttpServletRequest request);
 }
