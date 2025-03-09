@@ -73,7 +73,7 @@ public class UserController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
-        //用户注册
+        //用户登录
         LoginUserVo  loginUserVo = userService.login(userAccount,userPassword,request);
 
         return ResultUtils.success(loginUserVo);

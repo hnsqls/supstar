@@ -28,7 +28,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/favicon.ico",
                         "Mozilla/**",
                         "/user/register",
-                        "/user/login");
+                        "/user/login",
+                        "/user/logout");
 
     }
 }

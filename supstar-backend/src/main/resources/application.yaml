@@ -35,3 +35,9 @@ knife4j:
         api-rule-resources:
           - com.ls.supstar.controller
 
+
+# 日志
+logging:
+  file:
+    name: app.logs
+    path: logs
