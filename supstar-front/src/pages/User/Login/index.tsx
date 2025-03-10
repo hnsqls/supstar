@@ -21,6 +21,7 @@ import { createStyles } from 'antd-style';
 import React, { useState } from 'react';
 import { flushSync } from 'react-dom';
 import Settings from '../../../../config/defaultSettings';
+import { registerUsingPost } from '@/services/SupStar/userController';
 const useStyles = createStyles(({ token }) => {
   return {
     action: {
@@ -66,10 +67,6 @@ const ActionIcons = () => {
     </>
   );
 };
-const Lang = () => {
-  const { styles } = useStyles();
-  return;
-};
 const LoginMessage: React.FC<{
   content: string;
 }> = ({ content }) => {
@@ -100,14 +97,13 @@ const Login: React.FC = () => {
       });
     }
   };
-  const handleSubmit = async (values: API.LoginParams) => {
+  const handleSubmit = async (values: API.UserLoginRequest) => {
     try {
       // 登录
-      const msg = await login({
+      const msg = await registerUsingPost({
         ...values,
-        type,
       });
-      if (msg.status === 'ok') {
+      if (msg.message === 'ok') {
         const defaultLoginSuccessMessage = '登录成功！';
         message.success(defaultLoginSuccessMessage);
         await fetchUserInfo();
@@ -132,7 +128,6 @@ const Login: React.FC = () => {
           {'登录'}- {Settings.title}
         </title>
       </Helmet>
-      <Lang />
       <div
         style={{
           flex: '1',
@@ -152,7 +147,7 @@ const Login: React.FC = () => {
           }}
           actions={['其他登录方式 :', <ActionIcons key="icons" />]}
           onFinish={async (values) => {
-            await handleSubmit(values as API.LoginParams);
+            await handleSubmit(values as API.UserLoginRequest);
           }}
         >
           <Tabs
