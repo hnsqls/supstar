@@ -64,7 +64,7 @@
 
 
 
-        <!-- https://doc.xiaominfo.com/docs/quick-start#openapi2 -->
+<!--         https://doc.xiaominfo.com/docs/quick-start#openapi2-->
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
             <artifactId>knife4j-openapi2-spring-boot-starter</artifactId>
