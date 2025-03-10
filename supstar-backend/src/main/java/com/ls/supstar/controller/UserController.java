@@ -7,13 +7,11 @@ import com.ls.supstar.exeception.BusinessException;
 import com.ls.supstar.model.dto.user.UserLoginRequest;
 import com.ls.supstar.model.dto.user.UserRegisterRequest;
 
+import com.ls.supstar.model.entity.User;
 import com.ls.supstar.model.vo.LoginUserVo;
 import com.ls.supstar.service.UserService;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -96,6 +94,20 @@ public class UserController {
         //用户退出
         Boolean result = userService.logout(request);
         return ResultUtils.success(result);
+    }
+
+
+    /**
+     * 获取登录用户
+     * @param request
+     * @return
+     */
+    @GetMapping("/get/login")
+    public BaseResponse<LoginUserVo> getLoginUserVo(HttpServletRequest request) {
+
+        LoginUserVo loginUserVo = userService.getLogin(request);
+        return ResultUtils.success(loginUserVo);
+
     }
 
 

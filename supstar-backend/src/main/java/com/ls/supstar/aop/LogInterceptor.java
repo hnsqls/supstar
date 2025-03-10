@@ -85,13 +85,13 @@ public class LogInterceptor {
         } catch (BusinessException e) {
             stopWatch.stop();
             long totalTimeMillis = stopWatch.getTotalTimeMillis();
-            log.error("Business exception caught: requestId: {}, cost: {}ms, code: {}, message: {}",
+            log.error("request end Business exception caught: requestId: {}, cost: {}ms, code: {}, message: {}",
                     requestId, totalTimeMillis, e.getCode(), e.getMessage());
             throw e; // 保持 BusinessException 类型不变
         } catch (Exception e) {
             stopWatch.stop();
             long totalTimeMillis = stopWatch.getTotalTimeMillis();
-            log.error("System exception caught: requestId: {}, cost: {}ms, message: {}",
+            log.error("request end System exception caught: requestId: {}, cost: {}ms, message: {}",
                     requestId, totalTimeMillis, e.getMessage());
             throw e; // 保持 Exception 类型不变
         }

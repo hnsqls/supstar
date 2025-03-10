@@ -2,8 +2,16 @@
 /* eslint-disable */
 import { request } from '@umijs/max';
 
+/** getLoginUserVo POST /api/user/get/login */
+export async function getLoginUserVoUsingPost(options?: { [key: string]: any }) {
+  return request<API.BaseResponseLoginUserVo_>('/api/user/get/login', {
+    method: 'GET',
+    ...(options || {}),
+  });
+}
+
 /** register POST /api/user/login */
-export async function registerUsingPost(
+export async function loginUsingPost(
   body: API.UserLoginRequest,
   options?: { [key: string]: any },
 ) {
@@ -18,7 +26,7 @@ export async function registerUsingPost(
 }
 
 /** register POST /api/user/logout */
-export async function registerUsingPost1(options?: { [key: string]: any }) {
+export async function logoutUsingPost(options?: { [key: string]: any }) {
   return request<API.BaseResponseBoolean_>('/api/user/logout', {
     method: 'POST',
     ...(options || {}),
@@ -26,7 +34,7 @@ export async function registerUsingPost1(options?: { [key: string]: any }) {
 }
 
 /** register POST /api/user/register */
-export async function registerUsingPost2(
+export async function registerUsingPost(
   body: API.UserRegisterRequest,
   options?: { [key: string]: any },
 ) {

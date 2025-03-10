@@ -21,7 +21,7 @@ import { createStyles } from 'antd-style';
 import React, { useState } from 'react';
 import { flushSync } from 'react-dom';
 import Settings from '../../../../config/defaultSettings';
-import { loginUsingPost, registerUsingPost } from '@/services/SupStar/userController';
+import { registerUsingPost } from '@/services/SupStar/userController';
 const useStyles = createStyles(({ token }) => {
   return {
     action: {
@@ -97,25 +97,24 @@ const Login: React.FC = () => {
       });
     }
   };
-  const handleSubmit = async (values: API.UserLoginRequest) => {
+  const handleSubmit = async (values: API.UserRegisterRequest) => {
     try {
-      // 登录
-      const res = await loginUsingPost({
+      // 注册
+      const res = await registerUsingPost({
         ...values,
       });
       if (res.code === 0) {
-        const defaultLoginSuccessMessage = '登录成功！';
+        const defaultLoginSuccessMessage = '注册成功！';
         message.success(defaultLoginSuccessMessage);
         await fetchUserInfo();
         const urlParams = new URL(window.location.href).searchParams;
         history.push(urlParams.get('redirect') || '/');
         return;
-      }
-      else{
+      }else{
         message.error(res.message)
       }
     } catch (error) {
-      const defaultLoginFailureMessage = '登录失败，请重试！';
+      const defaultLoginFailureMessage = '注册失败，请重试！';
       console.log(error);
       message.error(defaultLoginFailureMessage);
     }
@@ -125,7 +124,7 @@ const Login: React.FC = () => {
     <div className={styles.container}>
       <Helmet>
         <title>
-          {'登录'}- {Settings.title}
+          {'注册'}- {Settings.title}
         </title>
       </Helmet>
       <div
@@ -157,11 +156,11 @@ const Login: React.FC = () => {
             items={[
               {
                 key: 'account',
-                label: '账户密码登录',
+                label: '账户密码注册',
               }
               // {
               //   key: 'mobile',
-              //   label: '手机号登录',
+              //   label: '手机号注册',
               // },
             ]}
           />
@@ -181,7 +180,7 @@ const Login: React.FC = () => {
                 rules={[
                   {
                     required: true,
-                    message: '账号是必填项！',
+                    message: '用户名是必填项！',
                   },
                 ]}
               />
@@ -192,6 +191,20 @@ const Login: React.FC = () => {
                   prefix: <LockOutlined />,
                 }}
                 placeholder={'请输入密码'}
+                rules={[
+                  {
+                    required: true,
+                    message: '密码是必填项！',
+                  },
+                ]}
+              />
+              <ProFormText.Password
+                name="checkPassword"
+                fieldProps={{
+                  size: 'large',
+                  prefix: <LockOutlined />,
+                }}
+                placeholder={'请再次输入密码'}
                 rules={[
                   {
                     required: true,
@@ -211,13 +224,12 @@ const Login: React.FC = () => {
           >
         
             <a
-             href='/user/register'
               style={{
                 float: 'right',
               }}
-             
+              href='/user/login'
             >
-              去注册
+              去登录
             </a>
           </div>
         </LoginForm>

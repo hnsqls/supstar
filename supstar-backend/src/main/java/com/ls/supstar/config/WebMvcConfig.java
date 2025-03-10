@@ -30,7 +30,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/druid/**",
                         "/user/register",
                         "/user/login",
-                        "/user/logout");
+                        "/user/logout",
+                        "/user/get/login");
 
     }
 }

@@ -141,6 +141,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         request.getSession().removeAttribute("user");
         return null;
     }
+
+    /**
+     * 获取当前登录用户
+     * @param request
+     * @return
+     */
+    @Override
+    public LoginUserVo getLogin(HttpServletRequest request) {
+        // 获取session
+        Object user = request.getSession().getAttribute("user");
+        if (user == null) {
+        throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "未登录");
+        }
+        // 根据id查询用户
+        Long userId = (Long) user;
+        User user1 = this.getById(userId);
+        // 返回结果
+        LoginUserVo loginUserVo = new LoginUserVo();
+        BeanUtils.copyProperties(user1, loginUserVo);
+        return loginUserVo;
+
+    }
 }
 
 

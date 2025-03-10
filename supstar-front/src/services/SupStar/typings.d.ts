@@ -18,10 +18,12 @@ declare namespace API {
   };
 
   type LoginUserVo = {
+    createTime?: string;
     id?: number;
-    userAccount?: string;
+    updateTime?: string;
     userAvatar?: string;
     userName?: string;
+    userProfile?: string;
     userRole?: string;
   };
 
