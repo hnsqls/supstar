@@ -15,9 +15,13 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.util.Random;
 import java.util.UUID;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 
 /**
  * 日志 AOP
@@ -46,7 +50,10 @@ public class LogInterceptor {
         String requestIp = request.getRemoteAddr();
 
 //        // 请求的主机名称
-//        String clientHostName = getClientHostName(requestIp);
+        String clientHostName = getClientHostName(requestIp);
+
+        // 请求的mac地址
+        String macAddress = getMacAddress(requestIp);
 
 
         // 发起请求的用户
@@ -64,7 +71,7 @@ public class LogInterceptor {
 
         // 输出请求日志
 //        log.info("request start: requestId:{}, userId:{},requestIp:{},url:{}, reqParam:{}", requestId,user,requestIp, url, reqParam);
-        log.info("request start: requestId:{}, userId:{},requestIp:{},url:{}", requestId,user,requestIp, url);
+        log.info("request start: requestId:{}, userId:{},requestIp:{},clientHostName:{},macAddress:{},url:{}", requestId,user,requestIp,clientHostName,macAddress, url);
 
 
 
@@ -107,12 +114,67 @@ public class LogInterceptor {
      */
     public static String getClientHostName(String clientIp) {
         try {
+            // 如果是IPv6的本地回环地址，转换为IPv4
+            if ("0:0:0:0:0:0:0:1".equals(clientIp) || "127.0.0.1".equals(clientIp)) {
+                // 获取本地主机名 这里不要通过ip 去解析 主机名，可能会有误，因为通过ip解析主机名称，是查dns系统 ip 对应的主机名，可能会有误。
+                InetAddress localHost = InetAddress.getLocalHost();
+                return localHost.getHostName();
+            }
+
+            // 不是本地的请求 就根据ip 获得IntAddress, 然后在获取主机名称
             InetAddress inetAddress = InetAddress.getByName(clientIp);
             return inetAddress.getHostName();
         } catch (UnknownHostException e) {
             return "unknown";
         }
     }
+
+    /**
+     * 获取mac 地址
+     * @param ipAddress
+     * @return
+     */
+    public static String getMacAddress(String ipAddress) {
+        try {
+            // 如果是本地回环地址，直接返回本机MAC地址
+            if ("0:0:0:0:0:0:0:1".equals(ipAddress) || "127.0.0.1".equals(ipAddress)) {
+                return getLocalMacAddress();
+            }
+            Process process = Runtime.getRuntime().exec("arp -a " + ipAddress);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains(ipAddress)) {
+                    String[] parts = line.split("\\s+");
+                    return parts[2]; // MAC地址通常是第三列， 打断点就知道
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "无法获取MAC地址";
+    }
+
+    /**
+     * 获取本机的mac 地址
+     * @return
+     */
+    public static String getLocalMacAddress() {
+        try {
+            InetAddress ip = InetAddress.getLocalHost();
+            NetworkInterface network = NetworkInterface.getByInetAddress(ip);
+            byte[] mac = network.getHardwareAddress();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < mac.length; i++) {
+                sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "无法获取MAC地址";
+        }
+    }
+
 
 
 
