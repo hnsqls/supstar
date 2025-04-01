@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ls.supstar.mapper.AttendanceRowMapper">
+
+
+    <!-- 批量插入忽略重复记录（MySQL语法） -->
+    <insert id="insertBatchIgnoreDuplicate" parameterType="java.util.List">
+        INSERT IGNORE INTO attendance_raw
+        (employee_id, employee_name, department, record_date, attendance_status,
+        attendance_point, custom_name, data_source, process_type, temperature, temperature_abnormal)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.employeeId}, #{item.employeeName}, #{item.department}, #{item.recordDate},
+            #{item.attendanceStatus}, #{item.attendancePoint}, #{item.customName}, #{item.dataSource},
+            #{item.processType}, #{item.temperature}, #{item.temperatureAbnormal})
+        </foreach>
+    </insert>
+</mapper>

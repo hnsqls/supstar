@@ -65,13 +65,13 @@ public class LogInterceptor {
 
 
         // todo 请求参数, 注意隐私，特别是密码要进行加密
-//        Object[] args = point.getArgs();
+        Object[] args = point.getArgs();
 //
-//        String reqParam = "[" + StringUtils.join(args, ",") + "]";
+        String reqParam = "[" + StringUtils.join(args, ",") + "]";
 
         // 输出请求日志
-//        log.info("request start: requestId:{}, userId:{},requestIp:{},url:{}, reqParam:{}", requestId,user,requestIp, url, reqParam);
-        log.info("request start: requestId:{}, userId:{},requestIp:{},clientHostName:{},macAddress:{},url:{}", requestId,user,requestIp,clientHostName,macAddress, url);
+        log.info("request start: requestId:{}, userId:{},requestIp:{},url:{}, reqParam:{}", requestId,user,requestIp, url, reqParam);
+//        log.info("request start: requestId:{}, userId:{},requestIp:{},clientHostName:{},macAddress:{},url:{}", requestId,user,requestIp,clientHostName,macAddress, url);
 
 
 
