@@ -12,6 +12,10 @@ target/
 *.iml
 *.ipr
 
+# 日志
+app.logs
+app.logs.2025-03-09.0.gz
+app.logs.2025-03-10.0.gz
 ### Eclipse ###
 .apt_generated
 .classpath
