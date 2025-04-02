@@ -5,8 +5,8 @@
 <mapper namespace="com.ls.supstar.mapper.AttendanceRowMapper">
 
 
-    <!-- 批量插入忽略重复记录（MySQL语法） -->
-    <insert id="insertBatchIgnoreDuplicate" parameterType="java.util.List">
+    <!-- 批量插入忽略重复记录（MySQL语法）-第一版 因为对于重复的数据，不能回显id -->
+    <insert id="insertBatchIgnoreDuplicate" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.List">
         INSERT IGNORE INTO attendance_raw
         (employee_id, employee_name, department, record_date, attendance_status,
         attendance_point, custom_name, data_source, process_type, temperature, temperature_abnormal)
@@ -17,4 +17,74 @@
             #{item.processType}, #{item.temperature}, #{item.temperatureAbnormal})
         </foreach>
     </insert>
+
+
+    <!-- 批量插入忽略重复记录（MySQL语法）-第二版 对于重复的数据进行更新，能够获得回显id 用于， 这个id回显混乱报错 -->
+    <!-- <insert id="upsertAttendanceRawBatch" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO attendance_raw
+        (employee_id, employee_name, department, record_date, attendance_status,
+        attendance_point, custom_name, data_source, process_type, temperature, temperature_abnormal)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.employeeId}, #{item.employeeName}, #{item.department}, #{item.recordDate},
+            #{item.attendanceStatus}, #{item.attendancePoint}, #{item.customName}, #{item.dataSource},
+            #{item.processType}, #{item.temperature}, #{item.temperatureAbnormal})
+        </foreach>
+        AS new_data ON DUPLICATE KEY UPDATE
+        employee_name = new_data.employee_name,
+        update_time = CURRENT_TIMESTAMP
+    </insert>
+
+
+    <!- 批量插入忽略重复记录（MySQL语法）-第三版 对于重复的数据进行更新，能够获得回显id 但是会新增id导致id多余实际-->
+    <!-- <insert id="upsertAttendanceRawBatch" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO attendance_raw
+        (employee_id, employee_name, department, record_date,
+        attendance_status, attendance_point, custom_name, data_source,
+        process_type, temperature, temperature_abnormal)
+        SELECT
+        tmp.employee_id,
+        tmp.employee_name,
+        tmp.department,
+        tmp.record_date,
+        tmp.attendance_status,
+        tmp.attendance_point,
+        tmp.custom_name,
+        tmp.data_source,
+        tmp.process_type,
+        tmp.temperature,
+        tmp.temperature_abnormal
+        FROM (
+        <foreach collection="list" item="item" separator=" UNION ALL ">
+            SELECT
+            #{item.employeeId} as employee_id,
+            #{item.employeeName} as employee_name,
+            #{item.department} as department,
+            #{item.recordDate} as record_date,
+            #{item.attendanceStatus} as attendance_status,
+            #{item.attendancePoint} as attendance_point,
+            #{item.customName} as custom_name,
+            #{item.dataSource} as data_source,
+            #{item.processType} as process_type,
+            #{item.temperature} as temperature,
+            #{item.temperatureAbnormal} as temperature_abnormal
+        </foreach>
+        ) AS tmp
+        ON DUPLICATE KEY UPDATE
+        id = LAST_INSERT_ID(id),
+        employee_name = VALUES(employee_name),
+        department = VALUES(department),
+        attendance_status = VALUES(attendance_status),
+        update_time = CURRENT_TIMESTAMP
+    </insert> -->
+
+
+    <!-- 添加查询已存在记录ID的方法 -->
+    <select id="selectExistingIds" parameterType="java.util.List" resultType="long">
+        SELECT id FROM attendance_raw 
+        WHERE (employee_id, record_date) IN 
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            (#{item.employeeId}, #{item.recordDate})
+        </foreach>
+    </select>
 </mapper>

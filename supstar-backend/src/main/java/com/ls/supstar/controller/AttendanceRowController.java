@@ -29,7 +29,7 @@ public class AttendanceRowController {
 
 
     @PostMapping("/import")
-    public BaseResponse<String> importExcel(@RequestParam("file") MultipartFile file) {
+    public BaseResponse<List<Long>> importExcel(@RequestParam("file") MultipartFile file) {
         try {
             // 1. 使用EasyExcel读取数据
             List<AttendanceRaw> rawData = EasyExcel.read(file.getInputStream())
@@ -39,9 +39,9 @@ public class AttendanceRowController {
                     .doReadSync();
 
             // 2. 清洗并保存
-            attendanceRowService.cleanAndSave(rawData);
+           List<Long> listIds =  attendanceRowService.cleanAndSave(rawData);
 
-            return ResultUtils.success("数据导入成功");
+            return ResultUtils.success(listIds);
         } catch (Exception e) {
             throw  new RuntimeException(e);
         }

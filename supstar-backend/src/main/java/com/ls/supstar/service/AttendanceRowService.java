@@ -9,5 +9,5 @@ public interface AttendanceRowService {
      * 清洗数据 并且保存到数据库
      * @param rawData
      */
-    void cleanAndSave(List<AttendanceRaw> rawData);
+    List<Long > cleanAndSave(List<AttendanceRaw> rawData);
 }

@@ -16,10 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,40 +29,59 @@ public class AttendanceRowServiceImpl extends ServiceImpl<AttendanceRowMapper, A
 
 
     @Transactional
-    public void cleanAndSave(List<AttendanceRaw> rawData) {
+    public List<Long> cleanAndSave(List<AttendanceRaw> rawData) {
         // 1. 数据校验 主要是 用户id 以及打卡日志不能为空
         List<AttendanceRaw> validData = validateData(rawData);
 
-        // 2. 数据转换   去除开头的‘,’
+        // 2. 数据转换   去除开头的','
         List<AttendanceRaw> transformedData = transformData(validData);
 
         // 3. 筛选每天最早和最晚打卡记录
         List<AttendanceRaw> filteredData = filterEarliestAndLatestRecords(transformedData);
 
-        // 4. 保存到数据库
+        if (filteredData.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 4. 先查询已存在记录的ID
+        List<Long> existingIds = attendanceRawMapper.selectExistingIds(filteredData);
+        Set<Long> resultIdSet = new HashSet<>(existingIds);
+
+        // 4. 版本1：保存到数据库--- 没有去重
 //        if (!filteredData.isEmpty()) {
 ////            attendanceRawMapper.insertBatch(filteredData); 自定义sql版本
 //            this.saveBatch(filteredData);
 //        }
 
 
-        // 批量插入忽略重复值
-        // 4. 批量插入忽略重复
+        // 4. 版本2：批量插入忽略重复值----对于重复的元素获取不到回显id-----使用  INSERT IGNORE INTO attendance_raw
         if (!filteredData.isEmpty()) {
             try {
                 attendanceRawMapper.insertBatchIgnoreDuplicate(filteredData);
+
             } catch (DuplicateKeyException e) {
                 // MySQL抛出的重复键异常
                 log.warn("检测到重复数据，已自动跳过");
-            } catch (DataIntegrityViolationException e) {
-                // 其他数据库可能抛出的异常
-                if (e.getMessage().contains("unique constraint") || e.getMessage().contains("Duplicate entry")) {
-                    log.warn("检测到重复数据，已自动跳过");
-                } else {
-                    throw e;
-                }
             }
         }
+
+
+
+        // 4. 版本3：批量插入/更新并获取所有ID（包括已存在的记录） 废弃
+//        if (filteredData.isEmpty()) {
+//            return Collections.emptyList();
+//        }
+//
+//        attendanceRawMapper.upsertAttendanceRawBatch(filteredData);
+
+
+        // 5. 提取插入成功的 ID 并合并已存在的ID
+        filteredData.stream()
+                .map(AttendanceRaw::getId)
+                .filter(Objects::nonNull) // 过滤掉 null 值（因为 IGNORE 可能导致部分数据未插入）
+                .forEach(resultIdSet::add);
+        
+        return new ArrayList<>(resultIdSet);
     }
 
     /**
