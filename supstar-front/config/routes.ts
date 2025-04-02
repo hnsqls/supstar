@@ -18,7 +18,9 @@ export default [
       { path: '/admin/sub-page', name: '二级管理页', component: './Admin' },
     ],
   },
+  { name: '考勤分析', icon: 'table', path: '/attendance', component: './Attendance' },
   { name: '查询表格', icon: 'table', path: '/list', component: './TableList' },
   { path: '/', redirect: '/welcome' },
   { path: '*', layout: false, component: './404' },
+
 ];
