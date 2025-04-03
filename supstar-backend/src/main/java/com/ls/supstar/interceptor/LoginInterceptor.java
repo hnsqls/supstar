@@ -19,6 +19,11 @@ public class LoginInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
+//         放行OPTIONS请求
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+//        System.out.println("【1】LoginInterceptor 执行，请求方法: " + request.getMethod());
         //  session登录方式
 //        //1. 获取session
         HttpSession session = request.getSession();

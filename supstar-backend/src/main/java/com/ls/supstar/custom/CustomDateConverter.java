@@ -5,6 +5,7 @@ import com.alibaba.excel.enums.CellDataTypeEnum;
 import com.alibaba.excel.exception.ExcelDataConvertException;
 import com.alibaba.excel.metadata.GlobalConfiguration;
 import com.alibaba.excel.metadata.data.ReadCellData;
+import com.alibaba.excel.metadata.data.WriteCellData;
 import com.alibaba.excel.metadata.property.ExcelContentProperty;
 import com.alibaba.excel.util.DateUtils;
 
@@ -22,6 +23,9 @@ public class CustomDateConverter implements Converter<Date> {
             "yyyy-MM-dd",
             "yyyy年M月d日"
     };
+    
+    // 导出时使用的日期格式
+    private static final String EXPORT_FORMAT = "yyyy/MM/dd HH:mm:ss";
 
     @Override
     public Class<Date> supportJavaTypeKey() {
@@ -71,13 +75,13 @@ public class CustomDateConverter implements Converter<Date> {
         }
     }
 
-//    @Override
-//    public ReadCellData<?> convertToExcelData(Date value, ExcelContentProperty contentProperty,
-//                                              GlobalConfiguration globalConfiguration) {
-//        if (value == null) {
-//            return new ReadCellData<>("");
-//        }
-//        // 统一转换为 yyyy-MM-dd HH:mm:ss 格式
-//        return new ReadCellData<>(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(value));
-//    }
+    @Override
+    public WriteCellData<?> convertToExcelData(Date value, ExcelContentProperty contentProperty,
+                                            GlobalConfiguration globalConfiguration) {
+        if (value == null) {
+            return new WriteCellData<>("");
+        }
+        // 统一转换为指定格式
+        return new WriteCellData<>(new SimpleDateFormat(EXPORT_FORMAT).format(value));
+    }
 }

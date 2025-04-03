@@ -5,6 +5,12 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseListLong_ = {
+    code?: number;
+    data?: number[];
+    message?: string;
+  };
+
   type BaseResponseLoginUserVo_ = {
     code?: number;
     data?: LoginUserVo;
@@ -14,12 +20,6 @@ declare namespace API {
   type BaseResponseLong_ = {
     code?: number;
     data?: number;
-    message?: string;
-  };
-
-  type BaseResponseString_ = {
-    code?: number;
-    data?: string;
     message?: string;
   };
 

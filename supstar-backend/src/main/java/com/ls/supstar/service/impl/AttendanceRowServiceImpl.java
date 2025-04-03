@@ -85,6 +85,27 @@ public class AttendanceRowServiceImpl extends ServiceImpl<AttendanceRowMapper, A
     }
 
     /**
+     * 根据ids 获得清洗后的数据
+     * @param ids
+     * @return
+     */
+    @Override
+    public List<AttendanceRaw> getAttendanceRawByIds(List<Long> ids) {
+
+        //校验数据
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        // 查询数据
+        List<AttendanceRaw> attendanceRaws = this.listByIds(ids);
+        if(attendanceRaws == null || attendanceRaws.isEmpty()){
+            return Collections.emptyList();
+        }
+
+        return attendanceRaws;
+    }
+
+    /**
      * 筛选每天最早和最晚打卡记录
      */
     private List<AttendanceRaw> filterEarliestAndLatestRecords(List<AttendanceRaw> data) {

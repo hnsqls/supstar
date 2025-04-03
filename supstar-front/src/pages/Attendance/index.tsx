@@ -1,10 +1,11 @@
 import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
-import { Button, Upload, DatePicker, Table, Card, Space, message, Input } from 'antd';
+import { Button, DatePicker, Table, Card, Space, message, Input } from 'antd';
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import moment from 'moment';
 import { PageContainer } from '@ant-design/pro-components';
-import { importExcelUsingPost } from '@/services/SupStar/attendanceRowController';
+import { importExcelUsingPost, exportExcelUsingPost } from '@/services/SupStar/attendanceRowController';
+
 
 const { MonthPicker } = DatePicker;
 
@@ -21,7 +22,10 @@ const Attendance: React.FC = () => {
   const [data, setData] = useState<AttendanceRecord[]>([]);
   const [filteredData, setFilteredData] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [downloadLoading, setDownloadLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [searchName, setSearchName] = useState<string>('');
+  const [recordIds, setRecordIds] = useState<number[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 处理文件选择
@@ -45,6 +49,11 @@ const Attendance: React.FC = () => {
       // 1. 发送到后端
       const apiRes = await importExcelUsingPost({}, file);
       if (apiRes.code !== 0) throw new Error(apiRes.message);
+      
+      // 保存后端返回的ID集合
+      if (apiRes.data && Array.isArray(apiRes.data)) {
+        setRecordIds(apiRes.data);
+      }
       
       // 2. 前端处理数据展示
       const excelData = await processExcelData(file);
@@ -85,15 +94,141 @@ const Attendance: React.FC = () => {
     return '正常';
   };
 
-  // 其他保持不变的方法...
-  const handleDownload = () => { /*...*/ };
-  const handleMonthChange = (date: moment.Moment | null) => { /*...*/ };
+  // 处理下载 - 使用axios
+  const handleDownload = async () => {
+    if (recordIds.length === 0) {
+      message.warning('没有可下载的数据，请先上传文件');
+      return;
+    }
+    
+    setDownloadLoading(true);
+    try {
+      // 使用服务层方法发送请求，明确设置Accept头
+      const response = await exportExcelUsingPost(recordIds, {
+        responseType: 'blob',
+        headers: {
+          'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }
+      });
+
+      // 检查响应类型
+      if (!(response instanceof Blob)) {
+        throw new Error('响应不是文件类型');
+      }
+
+      // 创建下载链接
+      const url = window.URL.createObjectURL(response);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `考勤数据_${moment().format('YYYY-MM-DD')}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // 清理
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+      
+      message.success('下载成功');
+    } catch (error: any) {
+      console.error('下载失败:', error);
+      message.error(error.message || '下载失败');
+    } finally {
+      setDownloadLoading(false);
+    }
+  };
+
+  // 处理月份变化
+  const handleMonthChange = (date: moment.Moment | null) => {
+    if (date) {
+      const monthStr = date.format('YYYY-MM');
+      setSelectedMonth(monthStr);
+      
+      // 筛选当月数据
+      const filtered = data.filter(record => record.date.startsWith(monthStr));
+      setFilteredData(filtered);
+    } else {
+      setSelectedMonth(null);
+      setFilteredData(data);
+    }
+  };
+
+  // 处理姓名搜索
+  const handleNameSearch = (value: string) => {
+    setSearchName(value);
+    
+    let filtered = data;
+    
+    // 先按月份筛选
+    if (selectedMonth) {
+      filtered = filtered.filter(record => record.date.startsWith(selectedMonth));
+    }
+    
+    // 再按姓名筛选
+    if (value) {
+      filtered = filtered.filter(record => record.name.includes(value));
+    }
+    
+    setFilteredData(filtered);
+  };
+
+  // 表格列定义
+  const columns = [
+    {
+      title: '员工ID',
+      dataIndex: 'id',
+      key: 'id',
+    },
+    {
+      title: '姓名',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: '日期',
+      dataIndex: 'date',
+      key: 'date',
+      sorter: (a: AttendanceRecord, b: AttendanceRecord) => a.date.localeCompare(b.date),
+    },
+    {
+      title: '签到时间',
+      dataIndex: 'checkIn',
+      key: 'checkIn',
+    },
+    {
+      title: '签退时间',
+      dataIndex: 'checkOut',
+      key: 'checkOut',
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => {
+        const colorMap: Record<string, string> = {
+          '正常': 'green',
+          '迟到': 'orange',
+          '早退': 'gold',
+          '缺勤': 'red',
+        };
+        return <span style={{ color: colorMap[status] || 'black' }}>{status}</span>;
+      },
+      filters: [
+        { text: '正常', value: '正常' },
+        { text: '迟到', value: '迟到' },
+        { text: '早退', value: '早退' },
+        { text: '缺勤', value: '缺勤' },
+      ],
+      onFilter: (value: string, record: AttendanceRecord) => record.status === value,
+    },
+  ];
 
   return (
     <PageContainer>
       <Card title="考勤分析" bordered={false}>
         <Space size="large" style={{ marginBottom: 24 }}>
-          {/* 新增的上传按钮 */}
+          {/* 上传按钮 */}
           <Button 
             icon={<UploadOutlined />} 
             loading={loading}
@@ -114,7 +249,8 @@ const Attendance: React.FC = () => {
           <Button 
             icon={<DownloadOutlined />} 
             onClick={handleDownload}
-            disabled={data.length === 0}
+            disabled={recordIds.length === 0}
+            loading={downloadLoading}
           >
             下载清洗后数据
           </Button>
@@ -124,9 +260,22 @@ const Attendance: React.FC = () => {
             onChange={handleMonthChange}
             style={{ width: 200 }}
           />
+          
+          <Input.Search
+            placeholder="搜索员工姓名"
+            onSearch={handleNameSearch}
+            style={{ width: 200 }}
+            allowClear
+          />
         </Space>
         
-        {/* 表格保持不变... */}
+        <Table 
+          columns={columns} 
+          dataSource={filteredData} 
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+          loading={loading}
+        />
       </Card>
     </PageContainer>
   );

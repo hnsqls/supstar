@@ -2,6 +2,22 @@
 /* eslint-disable */
 import { request } from '@umijs/max';
 
+/** exportExcel POST /api/attendanceRow/download */
+export async function exportExcelUsingPost(
+  body: number[],
+  options?: { [key: string]: any } & { responseType?: 'blob' }
+) {
+  return request<Blob>('/api/attendanceRow/download', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    responseType: options?.responseType || 'json',
+    ...(options || {}),
+  });
+}
+
 /** importExcel POST /api/attendanceRow/import */
 export async function importExcelUsingPost(
   body: {},
@@ -30,7 +46,7 @@ export async function importExcelUsingPost(
     }
   });
 
-  return request<API.BaseResponseString_>('/api/attendanceRow/import', {
+  return request<API.BaseResponseListLong_>('/api/attendanceRow/import', {
     method: 'POST',
     data: formData,
     requestType: 'form',
