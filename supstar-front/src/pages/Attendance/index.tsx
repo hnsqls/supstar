@@ -276,9 +276,30 @@ const Attendance: React.FC = () => {
       
       Modal.confirm({
         title: '选择月份',
+        okText: '确定',
+        cancelText: '取消',
         content: (
           <DatePicker.MonthPicker
             style={{ width: '100%' }}
+            placeholder="请选择月份"
+            locale={{
+              lang: {
+                locale: 'zh-CN',
+                yearFormat: 'YYYY年',
+                monthFormat: 'M月',
+                yearMonthFormat: 'YYYY年M月',
+                // 其他中文配置
+                today: '今天',
+                now: '此刻',
+                backToToday: '返回今天',
+                ok: '确定',
+                timeSelect: '选择时间',
+                dateSelect: '选择日期',
+                monthSelect: '选择月份',
+                yearSelect: '选择年份',
+                decadeSelect: '选择年代',
+              }
+            }}
             onChange={(date) => {
               selectedDate = date;
             }}
