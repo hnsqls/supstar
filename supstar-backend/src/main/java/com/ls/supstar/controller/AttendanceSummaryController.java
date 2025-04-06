@@ -14,7 +14,10 @@ import com.ls.supstar.util.CustomCellWriteHandler;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.io.IOException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -246,6 +249,61 @@ public class AttendanceSummaryController {
             case Calendar.SATURDAY: return "星期六";
             case Calendar.SUNDAY: return "星期日";
             default: return "";
+        }
+    }
+    
+    /**
+     * 按月导出考勤数据到Excel并通过Web下载（从原始打卡记录生成）
+     * @param year 年份
+     * @param month 月份
+     * @return 文件下载响应
+     */
+    @GetMapping("/downloadMonthlyAttendance")
+    public void downloadMonthlyAttendance(@RequestParam int year, @RequestParam int month, 
+                                          HttpServletResponse response) {
+        try {
+            // 1. 获取月度考勤数据
+            List<MonthlyAttendanceDTO> monthlyData = getMonthlyAttendanceDataFromRaw(year, month);
+            
+            if(monthlyData.isEmpty()) {
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"code\":40000,\"message\":\"该月份没有考勤数据\",\"data\":null}");
+                return;
+            }
+            
+            // 2. 设置响应头
+            String fileName = year + "年" + month + "月考勤数据.xlsx";
+            fileName = URLEncoder.encode(fileName, "UTF-8").replaceAll("\\+", "%20");
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setCharacterEncoding("utf-8");
+            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName);
+            
+            // 3. 直接写入Excel到响应输出流
+            try (ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream())
+                    .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy())
+                    .registerWriteHandler(new CustomCellWriteHandler()) // 添加自定义单元格样式处理器
+                    .build()) {
+                WriteSheet writeSheet = EasyExcel.writerSheet(month + "月考勤数据").build();
+                
+                // 创建完整的数据列表（包含表头和数据）
+                List<List<Object>> allData = createCompleteDataList(monthlyData, year, month);
+                
+                // 写入所有数据
+                excelWriter.write(allData, writeSheet);
+            }
+            
+            System.out.println("Web导出" + year + "年" + month + "月考勤数据成功");
+            
+        } catch (Exception e) {
+            System.err.println("Web导出考勤数据失败: " + e.getMessage());
+            e.printStackTrace();
+            try {
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"code\":50000,\"message\":\"生成月度考勤数据失败: " 
+                        + e.getMessage() + "\",\"data\":null}");
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 }
