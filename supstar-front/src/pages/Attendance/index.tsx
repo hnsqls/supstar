@@ -4,7 +4,8 @@ import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import moment from 'moment';
 import { PageContainer } from '@ant-design/pro-components';
-import { importExcelUsingPost, exportExcelUsingPost, exportMonthlyAttendance } from '@/services/SupStar/attendanceRowController';
+import { importExcelUsingPost, exportExcelUsingPost } from '@/services/SupStar/attendanceRowController';
+import { downloadMonthlyAttendanceUsingGet } from '@/services/SupStar/attendanceSummaryController';
 
 
 const { MonthPicker } = DatePicker;
@@ -233,12 +234,21 @@ const Attendance: React.FC = () => {
     const { year, month } = picker;
     setDownloadLoading(true);
     try {
-      const response = await exportMonthlyAttendance(
+      const response = await downloadMonthlyAttendanceUsingGet(
         { year, month },
         { responseType: 'blob' }
       );
 
-      const url = window.URL.createObjectURL(new Blob([response]));
+      // 检查响应类型
+      if (!(response instanceof Blob)) {
+        // 如果返回的不是Blob，可能是API返回了错误信息
+        if (response.code !== 0) {
+          throw new Error(response.message || '下载失败');
+        }
+        throw new Error('响应不是文件类型');
+      }
+
+      const url = window.URL.createObjectURL(response);
       const link = document.createElement('a');
       link.href = url;
       link.download = `考勤月度汇总_${year}年${month}月.xlsx`;

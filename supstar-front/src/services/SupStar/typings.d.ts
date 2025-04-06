@@ -23,6 +23,26 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponseString_ = {
+    code?: number;
+    data?: string;
+    message?: string;
+  };
+
+  type downloadMonthlyAttendanceUsingGETParams = {
+    /** month */
+    month: number;
+    /** year */
+    year: number;
+  };
+
+  type exportMonthlyAttendanceUsingGETParams = {
+    /** month */
+    month: number;
+    /** year */
+    year: number;
+  };
+
   type LoginUserVo = {
     createTime?: string;
     id?: number;
