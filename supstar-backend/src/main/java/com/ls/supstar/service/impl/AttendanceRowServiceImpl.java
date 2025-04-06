@@ -1,5 +1,6 @@
 package com.ls.supstar.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ls.supstar.mapper.AttendanceRowMapper;
 import com.ls.supstar.mapper.AttendanceSummaryMapper;
@@ -169,5 +170,30 @@ public class AttendanceRowServiceImpl extends ServiceImpl<AttendanceRowMapper, A
                     }
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<AttendanceRaw> getByDateRange(Date startDate, Date endDate) {
+        try {
+            log.info("开始查询原始考勤数据，时间范围: {} 至 {}", startDate, endDate);
+            
+            QueryWrapper<AttendanceRaw> queryWrapper = new QueryWrapper<>();
+            queryWrapper.between("record_date", startDate, endDate);
+            queryWrapper.orderByAsc("employee_id", "record_date");
+            
+            List<AttendanceRaw> result = this.list(queryWrapper);
+            
+            if (result.isEmpty()) {
+                log.warn("未找到指定时间范围内的原始考勤数据");
+            } else {
+                log.info("成功查询到 {} 条原始考勤记录", result.size());
+            }
+            
+            return result;
+            
+        } catch (Exception e) {
+            log.error("查询原始考勤数据时发生异常", e);
+            throw new RuntimeException("查询原始考勤数据失败", e);
+        }
     }
 }

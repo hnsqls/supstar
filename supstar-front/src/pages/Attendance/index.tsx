@@ -1,10 +1,10 @@
 import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
-import { Button, DatePicker, Table, Card, Space, message, Input } from 'antd';
+import { Button, DatePicker, Table, Card, Space, message, Input, Modal } from 'antd';
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import moment from 'moment';
 import { PageContainer } from '@ant-design/pro-components';
-import { importExcelUsingPost, exportExcelUsingPost } from '@/services/SupStar/attendanceRowController';
+import { importExcelUsingPost, exportExcelUsingPost, exportMonthlyAttendance } from '@/services/SupStar/attendanceRowController';
 
 
 const { MonthPicker } = DatePicker;
@@ -224,6 +224,73 @@ const Attendance: React.FC = () => {
     },
   ];
 
+  // 新增处理考勤汇总下载函数
+  const handleSummaryDownload = async () => {
+    // 打开月份选择器
+    const picker = await showMonthPicker();
+    if (!picker) return;  // 用户取消选择
+    
+    const { year, month } = picker;
+    setDownloadLoading(true);
+    try {
+      const response = await exportMonthlyAttendance(
+        { year, month },
+        { responseType: 'blob' }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `考勤月度汇总_${year}年${month}月.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+      
+      message.success('汇总下载成功');
+    } catch (error: any) {
+      console.error('汇总下载失败:', error);
+      message.error(error.message || '汇总下载失败');
+    } finally {
+      setDownloadLoading(false);
+    }
+  };
+
+  // 新增月份选择器函数
+  const showMonthPicker = () => {
+    return new Promise<{ year: number; month: number } | null>((resolve) => {
+      let selectedDate: moment.Moment | null = null;
+      
+      Modal.confirm({
+        title: '选择月份',
+        content: (
+          <DatePicker.MonthPicker
+            style={{ width: '100%' }}
+            onChange={(date) => {
+              selectedDate = date;
+            }}
+          />
+        ),
+        onOk: () => {
+          if (!selectedDate) {
+            message.warning('请选择月份');
+            return Promise.reject();
+          }
+          resolve({
+            year: selectedDate.year(),
+            month: selectedDate.month() + 1  // moment月份从0开始，需要+1
+          });
+        },
+        onCancel: () => {
+          resolve(null);
+        },
+      });
+    });
+  };
+
   return (
     <PageContainer>
       <Card title="考勤分析" bordered={false}>
@@ -253,6 +320,15 @@ const Attendance: React.FC = () => {
             loading={downloadLoading}
           >
             下载清洗后数据
+          </Button>
+          
+          <Button 
+            icon={<DownloadOutlined />} 
+            onClick={handleSummaryDownload}
+            loading={downloadLoading}
+            type="primary"
+          >
+            下载考勤汇总
           </Button>
           
           <MonthPicker 

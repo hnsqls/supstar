@@ -53,3 +53,22 @@ export async function importExcelUsingPost(
     ...(options || {}),
   });
 }
+
+/** 导出月度考勤汇总 GET /api/attendanceSummary/exportMonthlyAttendance */
+export async function exportMonthlyAttendance(
+  params: {
+    year: number;
+    month: number;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<Blob>('/api/attendanceSummary/exportMonthlyAttendance', {
+    method: 'GET',
+    params: params,
+    responseType: 'blob',
+    headers: {
+      'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    },
+    ...(options || {}),
+  });
+}
